@@ -15,6 +15,9 @@ func System(vars Variables, procs ...process) system {
 type varName string
 type Variables map[varName]int
 
+type lockName string
+type locks []lockName
+
 type procName string
 type process struct {
 	name       procName
@@ -179,6 +182,7 @@ type guard interface {
 }
 
 var _ guard = whenGuard{}
+var _ guard = lockGuard{}
 
 type whenGuard struct {
 	expression boolExpression
@@ -188,6 +192,14 @@ func When(bexpr boolExpression) whenGuard {
 	return whenGuard{
 		expression: bexpr,
 	}
+}
+
+type lockGuard struct {
+	name lockName
+}
+
+func Lock(name lockName) lockGuard {
+	return lockGuard{name: name}
 }
 
 type guardedCase struct {
@@ -218,4 +230,14 @@ func For(cases ...guardedCase) forStatement {
 	return forStatement{
 		cases: cases,
 	}
+}
+
+var _ statement = unlockStatement{}
+
+type unlockStatement struct {
+	name lockName
+}
+
+func Unlock(name lockName) unlockStatement {
+	return unlockStatement{name: name}
 }

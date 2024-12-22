@@ -19,6 +19,15 @@ func (wld world) label() string {
 		val := wld.environment.variables[varName(name)]
 		strs = append(strs, fmt.Sprintf("%s=%d", name, val))
 	}
+	lnames := []string{}
+	for name := range wld.environment.locks {
+		lnames = append(lnames, string(name))
+	}
+	sort.Strings(lnames)
+	for _, name := range lnames {
+		pname := wld.environment.locks[lockName(name)]
+		strs = append(strs, fmt.Sprintf("%s[%s]", name, pname))
+	}
 	return strings.Join(strs, "\n")
 }
 

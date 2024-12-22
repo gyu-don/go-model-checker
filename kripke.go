@@ -53,6 +53,16 @@ func id(env environment, counters map[procName][]statement) worldID {
 		strs = append(strs, fmt.Sprintf("%s=%d", name, val))
 	}
 
+	lname := []string{}
+	for name := range env.locks {
+		lname = append(lname, string(name))
+	}
+	sort.Strings(lname)
+	for _, name := range lname {
+		pname := env.locks[lockName(name)]
+		strs = append(strs, fmt.Sprintf("%s[%s]", name, pname))
+	}
+
 	pnames := []string{}
 	for name := range counters {
 		pnames = append(pnames, string(name))
@@ -79,6 +89,7 @@ func initialWorld(sys system) world {
 	}
 	newEnv := environment{
 		variables: vars,
+		locks:     map[lockName]procName{},
 	}
 	return NewWorld(newEnv, counters)
 }

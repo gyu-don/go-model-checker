@@ -22,12 +22,15 @@ func (wld world) label() string {
 	return strings.Join(strs, "\n")
 }
 
-func (model kripkeModel) WriteAsDot(w io.Writer) {
+func (model kripkeModel) WriteAsDot(w io.Writer, result *verificationResult) {
 	fmt.Fprintln(w, "digraph {")
 	for id, wld := range model.worlds {
 		fmt.Fprintf(w, "    %d [ label = \"%s\" ];\n", id, wld.label())
 		if id == model.initial {
 			fmt.Fprintf(w, "    %d [ penwidth = 5 ];\n", id)
+		}
+		if result != nil && result.targets.member(id) {
+			fmt.Fprintf(w, "    %d [ style = filled, fillcolor = gray ]; \n", id)
 		}
 	}
 	for from, tos := range model.accessible {

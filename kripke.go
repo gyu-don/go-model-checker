@@ -60,7 +60,7 @@ func id(env environment, counters map[procName][]statement) worldID {
 	sort.Strings(pnames)
 	for _, name := range pnames {
 		stmts := counters[procName(name)]
-		strs = append(strs, fmt.Sprintf("%s=%+v", name, stmts)) // TODO: what's %+V?
+		strs = append(strs, fmt.Sprintf("%s=%+v", name, stmts))
 	}
 	hasher := fnv.New64a()
 	hasher.Write([]byte(strings.Join(strs, ",")))
@@ -146,4 +146,8 @@ func KripkeModel(sys system) (kripkeModel, error) {
 		initial:    init.id,
 		accessible: accs,
 	}, nil
+}
+
+func (wld world) valuationLT(name varName, val int) bool {
+	return wld.environment.variables[name] < val
 }

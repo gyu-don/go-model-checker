@@ -11,5 +11,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	model.WriteAsDot(os.Stdout)
+	result := model.VerifyInvariantLT("critical", 2)
+	model.WriteAsDot(os.Stdout, &result)
 }

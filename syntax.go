@@ -2,12 +2,14 @@ package main
 
 type system struct {
 	variables Variables
+	locks     Locks
 	processes []process
 }
 
-func System(vars Variables, procs ...process) system {
+func System(vars Variables, locks Locks, procs ...process) system {
 	return system{
 		variables: vars,
+		locks:     locks,
 		processes: procs,
 	}
 }
@@ -16,7 +18,7 @@ type varName string
 type Variables map[varName]int
 
 type lockName string
-type locks []lockName
+type Locks []lockName
 
 type procName string
 type process struct {

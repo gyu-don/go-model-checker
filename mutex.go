@@ -28,6 +28,7 @@ func goodThread(name procName) process {
 func BadMutex() system {
 	return System(
 		Variables{"critical": 0},
+		Locks{},
 		badThread("A"),
 		badThread("B"),
 		badThread("C"),
@@ -37,6 +38,7 @@ func BadMutex() system {
 func GoodMutex() system {
 	return System(
 		Variables{"critical": 0},
+		Locks{"mutex"},
 		goodThread("A"),
 		goodThread("B"),
 		goodThread("C"),

@@ -87,6 +87,7 @@ func (expr orExpression) eval(vars map[varName]int) (bool, error) {
 
 type environment struct {
 	variables map[varName]int
+	locks     map[lockName]procName
 }
 
 type localState struct {
@@ -113,8 +114,11 @@ func (stmt assignStatement) execute(env environment, pname procName, cont []stat
 		}
 	}
 	state := localState{
-		environment: environment{variables: vars},
-		statements:  cont,
+		environment: environment{
+			variables: vars,
+			locks:     env.locks,
+		},
+		statements: cont,
 	}
 	return []localState{state}, nil
 }
@@ -129,6 +133,22 @@ func (grd whenGuard) execute(
 		return env, false, nil
 	}
 	return env, true, nil
+}
+
+func (grd lockGuard) execute(
+	env environment, pname procName) (environment, bool, error) {
+	locks := map[lockName]procName{}
+	for ln, pn := range env.locks {
+		if _, ok := env.locks[grd.name]; ok {
+			return env, false, nil
+		}
+		locks[ln] = pn
+	}
+	locks[grd.name] = pname
+	return environment{
+		variables: env.variables,
+		locks:     locks,
+	}, true, nil
 }
 
 func (stmt switchStatement) execute(env environment, pname procName, cont []statement) ([]localState, error) {
@@ -168,4 +188,23 @@ func (stmt forStatement) execute(env environment, pname procName, cont []stateme
 		}
 	}
 	return states, nil
+}
+
+func (stmt unlockStatement) execute(env environment, pname procName, cont []statement) ([]localState, error) {
+	locks := map[lockName]procName{}
+	for ln, pn := range env.locks {
+		if pn, ok := env.locks[stmt.name]; ok && pn != pname {
+			return []localState{}, nil
+		}
+		locks[ln] = pn
+	}
+	delete(locks, stmt.name)
+	state := localState{
+		environment: environment{
+			variables: env.variables,
+			locks:     locks,
+		},
+		statements: cont,
+	}
+	return []localState{state}, nil
 }

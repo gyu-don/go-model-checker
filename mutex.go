@@ -1,15 +1,6 @@
 package main
 
 func badThread(name procName) process {
-	/*
-		process {name}
-		for {
-		True:
-			critical = critical + 1
-			critical = critical - 1
-		}
-	*/
-	// write above with our syntax
 	return Process(name,
 		For(
 			Case(When(True()),
@@ -21,11 +12,33 @@ func badThread(name procName) process {
 	)
 }
 
-func Mutex() system {
+func goodThread(name procName) process {
+	return Process(name,
+		For(
+			Case(Lock("mutex"),
+				Assign("critical", Add(Var("critical"), Int(1))),
+				// critical session
+				Assign("critical", Sub(Var("critical"), Int(1))),
+				Unlock("mutex"),
+			),
+		),
+	)
+}
+
+func BadMutex() system {
 	return System(
 		Variables{"critical": 0},
 		badThread("A"),
 		badThread("B"),
 		badThread("C"),
+	)
+}
+
+func GoodMutex() system {
+	return System(
+		Variables{"critical": 0},
+		goodThread("A"),
+		goodThread("B"),
+		goodThread("C"),
 	)
 }

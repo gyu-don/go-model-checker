@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	sys := Mutex()
+	sys := GoodMutex()
 	model, err := KripkeModel(sys)
 	if err != nil {
 		log.Fatal(err)

@@ -1,4 +1,4 @@
-package main
+package modelchecker
 
 func badThread(name procName) process {
 	return Process(name,

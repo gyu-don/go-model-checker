@@ -1,4 +1,4 @@
-package main
+package modelchecker
 
 type verificationResult struct {
 	targets worldIDs

@@ -1,4 +1,4 @@
-package main
+package modelchecker
 
 type system struct {
 	variables Variables

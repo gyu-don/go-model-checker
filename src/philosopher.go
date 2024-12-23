@@ -1,4 +1,4 @@
-package main
+package modelchecker
 
 func badPhilosopher(name procName, right, left lockName, hold varName) process {
 	return Process(name,

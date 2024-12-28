@@ -83,3 +83,33 @@ StateFormula := & AtomicFormula \ | \\
 \end{align*}$$
 
 さらに、実はこれらは $\mathbf{EX}, \mathbf{EG}, \mathbf{EU}$ だけで書けるらしい(証明略)。
+
+## 充足検査
+
+$\pi$ は無限に長いものがありえて、それをどう扱うかを考える必要があるが、状態論理式にもはやパス論理式は明示的には出てこない。
+
+**Def** 充足集合(satisfying set):  
+$K = (W, R, I, AP, V)$: Kripke model, $\phi$: 状態論理式  
+$$S(\phi) := \{w \in W | w \models \phi\}$$
+を$\phi$ の充足集合という。
+
+**Def** 充足:  
+$K$ が $\phi$ を充足するとは、初期条件 $I$ が充足集合に含まれていることをいう。すなわち
+$$I \subset S(\phi).$$
+ただし、書籍では $I$ を集合ではなく単一の条件としているので、 $I \in S(\phi)$.
+
+### EX論理式の検査
+$\mathbf{EX}\phi$ は、ワンステップ先で $\phi$ が成り立つようなパスが存在することを表していたので、 $S(\mathbf{EX}\phi) = \{w \in W | \exists w' \in W. w'\in S(\phi) \wedge (w, w') \in R \}$ 
+
+もうちょい真面目に書くと。
+
+$\pi \models \mathbf{X}\phi$ は、 $\pi = w_0 w_1 \cdots$ としたとき、 $w_1 \models \phi$ を表す。また、 $w_0\models\mathbf{E}\Phi$ は、 $\exists \pi = w_0 \cdots, \pi\models\Phi$ を表す (ただし、$\pi$を有効なパスとする)。なので、 $w\models\mathbf{EX}\phi$ は、 $\exists\pi = ww_1\cdots, w_1\models\phi$ を表す。 $\pi$ が有効なパスであることから、これはすなわち、 $w\models\mathbf{EX}\phi = (\exists w_1 \in W, (w, w_1) \in R \wedge w_1 \models \phi)$ と同じ。$S(\phi) = \{w \in W | w \models \phi\}$ に注意すると、 
+$$S(\mathbf{EX}\phi) = \{w \in W | \exists w' \in W, w' \in S(\phi) \wedge (w, w') \in R\}.$$
+
+これくらいであれば $w$ のひとつ先を辿るだけで検査が出来る。
+
+### EU論理式の検査
+$\pi = w_0 w_1 w_2 \cdots$ とすると、 $\pi\models\phi\mathbf{U}\psi = (\exists i\in\mathbb{N}, w_i \in S(\psi) \wedge \forall j \leq i, w_j \in S(\phi))$ なので、 
+$$S(\mathbf{E}(\phi\mathbf{U}\psi)) = \{w_0 \in W | \exists \pi = w_0 w_1 \cdots, \exists i\in\mathbb{N}, w_i \in S(\psi) \wedge \forall j \leq i, w_j \in S(\phi)\}.$$
+
+パスは無限に長くなりうるが、終端の $S(\psi)$ を満たすものから検査していける。 (そのために、エッジを逆向きに辿るための情報を `kripkeModel` に追加する必要がある)

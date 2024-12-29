@@ -11,6 +11,7 @@ type kripkeModel struct {
 	worlds     worlds
 	initial    worldID
 	accessible map[worldID][]worldID
+	reverse    map[worldID][]worldID
 }
 
 type worldID uint64
@@ -131,6 +132,7 @@ func KripkeModel(sys system) (kripkeModel, error) {
 	visited := worlds{}
 	visited.insert(init)
 	accs := map[worldID][]worldID{}
+	revs := map[worldID][]worldID{}
 
 	stack := []world{init}
 	for len(stack) > 0 {
@@ -143,7 +145,14 @@ func KripkeModel(sys system) (kripkeModel, error) {
 			return kripkeModel{}, err
 		}
 		for _, next := range nexts {
+			// Forward
 			acc = append(acc, next.id)
+			// Reverse
+			rev, ok := revs[next.id]
+			if !ok {
+				rev = []worldID{}
+			}
+			revs[next.id] = append(rev, current.id)
 
 			if !visited.member(next) {
 				visited.insert(next)
@@ -156,6 +165,7 @@ func KripkeModel(sys system) (kripkeModel, error) {
 		worlds:     visited,
 		initial:    init.id,
 		accessible: accs,
+		reverse:    revs,
 	}, nil
 }
 

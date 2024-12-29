@@ -54,7 +54,7 @@ type path_formula =
     | G φ -> forall i, i >= 0 -> π(i) |= φ                  (* Globally *)
     | U (φ, ψ) -> exists i >= 0,
                       π(i) |= ψ &&
-                      (forall i, 0 <= j <= i -> π(j) |= φ)  (* Until *)
+                      (forall i, 0 <= j < i -> π(j) |= φ)  (* Until *)
 ```
 
 パス論理式の意味は自然言語で書くと、$\pi$ に沿って実行が行われたときに:
@@ -63,6 +63,10 @@ type path_formula =
 - $\mathbf{F}\ \phi$ は、未来のどこかで $\phi$ が成り立つこと
 - $\mathbf{G}\ \phi$ は、常に $\phi$ が成り立ち続けること
 - $\phi\ \mathbf{U}\ \psi$ は、未来のどこかの時点で $\psi$ が成立し、かつ、その少なくとも直前までは $\phi$ が成立し続けていること。
+
+$\phi\ \mathbf{U}\ \psi$ の定義について、文章やコードでは、$\phi$ は、 $\psi$ が成り立つときには成り立っていなくてもいいように読める($j < i$) 。
+しかし、意味論では、 $\psi$ が成り立っているときにも $\phi$ が成り立っている必要があるように読める ($j \le i$)。
+他の文献、具体的には[この資料](https://www.cs.utexas.edu/~moore/acl2/seminar/2010.05-19-krug/slides.pdf)や[この資料](https://www.depts.ttu.edu/cs/research/documents/ksattlc.pdf)を見ても $j < i$ が正しそう。
 
 ## 相互再帰を使わない定義
 
@@ -110,6 +114,10 @@ $$S(\mathbf{EX}\phi) = \{w \in W | \exists w' \in W, w' \in S(\phi) \wedge (w, w
 
 ### EU論理式の検査
 $\pi = w_0 w_1 w_2 \cdots$ とすると、 $\pi\models\phi\mathbf{U}\psi = (\exists i\in\mathbb{N}, w_i \in S(\psi) \wedge \forall j \leq i, w_j \in S(\phi))$ なので、 
-$$S(\mathbf{E}(\phi\mathbf{U}\psi)) = \{w_0 \in W | \exists \pi = w_0 w_1 \cdots, \exists i\in\mathbb{N}, w_i \in S(\psi) \wedge \forall j \leq i, w_j \in S(\phi)\}.$$
+$$S(\mathbf{E}(\phi\mathbf{U}\psi)) = \{w_0 \in W | \exists \pi = w_0 w_1 \cdots, \exists i\in\mathbb{N}, w_i \in S(\psi) \wedge \forall j < i, w_j \in S(\phi)\}.$$
 
-パスは無限に長くなりうるが、終端の $S(\psi)$ を満たすものから検査していける。 (そのために、エッジを逆向きに辿るための情報を `kripkeModel` に追加する必要がある)
+パスは無限に長くなりうるが、終端の $S(\psi)$ を満たすものから検査していける。 (そのために、エッジを逆向きに辿るための情報を `kripkeModel` に追加する必要がある)  
+すなわち、ある意味帰納的に求められる。
+
+$$S(\mathbf{E}(\phi\mathbf{U}\psi)) = \{w | w \in S(\psi)\} \cup \{w \in S(\phi) | w' \in S(\mathbf{E}(\phi\mathbf{U}\psi)) \wedge (w, w') \in R\}$$
+

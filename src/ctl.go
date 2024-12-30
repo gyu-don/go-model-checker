@@ -138,3 +138,132 @@ func (f existsUntilCTLFormula) satisfyingSet(model kripkeModel) worldIDs {
 	}
 	return sat
 }
+
+func backtrackOrder(accessible map[worldID][]worldID) []worldID {
+	order := []worldID{}
+	visited := worldIDs{}
+	ordered := worldIDs{}
+
+	for start := range accessible {
+		if visited.member(start) {
+			continue
+		}
+		stack := []worldID{start}
+		for len(stack) > 0 {
+			current := stack[len(stack)-1]
+			if !visited.member(current) {
+				visited.insert(current)
+				for _, next := range accessible[current] {
+					if !visited.member(next) {
+						stack = append(stack, next)
+					}
+				}
+			} else {
+				if !ordered.member(current) {
+					order = append(order, current)
+					ordered.insert(current)
+				}
+				stack = stack[:len(stack)-1]
+			}
+		}
+	}
+	return order
+}
+
+// strongly connected component
+func scc(accessible, reverse map[worldID][]worldID) [][]worldID {
+	order := backtrackOrder(accessible)
+	revOrder := make([]worldID, len(order))
+	for i, id := range order {
+		revOrder[len(order)-i-1] = id
+	}
+
+	compos := [][]worldID{}
+	visited := worldIDs{}
+
+	for _, start := range revOrder {
+		if visited.member(start) {
+			continue
+		}
+		compo := []worldID{start}
+		visited.insert(start)
+		stack := []worldID{start}
+
+		for len(stack) > 0 {
+			current := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			for _, prev := range reverse[current] {
+				if !visited.member(prev) {
+					compo = append(compo, prev)
+					visited.insert(prev)
+					stack = append(stack, prev)
+				}
+			}
+		}
+		compos = append(compos, compo)
+	}
+	return compos
+}
+
+func restrict(model kripkeModel, target worldIDs) (map[worldID][]worldID, map[worldID][]worldID) {
+	accs := map[worldID][]worldID{}
+	for from, tos := range model.accessible {
+		if target.member(from) {
+			acc := []worldID{}
+			for _, to := range tos {
+				if target.member(to) {
+					acc = append(acc, to)
+				}
+			}
+			accs[from] = acc
+		}
+	}
+	revs := map[worldID][]worldID{}
+	for to, froms := range model.reverse {
+		rev := []worldID{}
+		for _, from := range froms {
+			if target.member(from) {
+				rev = append(rev, from)
+			}
+		}
+		revs[to] = rev
+	}
+	return accs, revs
+}
+
+func (f existsGloballyCTLFormula) satisfyingSet(model kripkeModel) worldIDs {
+	target := f.formula.satisfyingSet(model)
+
+	sat := worldIDs{}
+	visited := worldIDs{}
+	queue := []worldID{}
+
+	accs, revs := restrict(model, target)
+	sccs := scc(accs, revs)
+	for _, scc := range sccs {
+		if len(scc) >= 2 {
+			for _, id := range scc {
+				sat.insert(id)
+				visited.insert(id)
+				queue = append(queue, id)
+			}
+		}
+	}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		for _, prev := range model.reverse[current] {
+			if !visited.member(prev) && target.member(prev) {
+				sat.insert(prev)
+				visited.insert(prev)
+				queue = append(queue, prev)
+			}
+		}
+	}
+	return sat
+}
+
+func (model kripkeModel) VerifyCTL(f ctlFormula) verificationResult {
+	return verificationResult{targets: f.satisfyingSet(model)}
+}
